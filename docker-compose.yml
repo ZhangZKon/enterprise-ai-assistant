@@ -1,0 +1,95 @@
+# ==========================================
+# RAG 项目基础设施（一条命令全部拉起）
+# 用法：
+#   启动: docker compose up -d
+#   停止: docker compose stop
+#   查看: docker compose ps
+# ==========================================
+services:
+  # ---------- Milvus 依赖：etcd ----------
+  etcd:
+    container_name: rag-etcd
+    image: quay.io/coreos/etcd:v3.5.5
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    volumes:
+      - rag-etcd-data:/etcd
+    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls=http://0.0.0.0:2379 --data-dir=/etcd
+    restart: unless-stopped
+
+  # ---------- Milvus 向量数据库 ----------
+  milvus:
+    container_name: rag-milvus
+    image: milvusdb/milvus:v2.4.9
+    depends_on:
+      - etcd
+    environment:
+      ETCD_ENDPOINTS: rag-etcd:2379
+      MINIO_ADDRESS: rag-minio:9000
+    volumes:
+      - rag-milvus-data:/var/lib/milvus
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    command: milvus run standalone
+    restart: unless-stopped
+
+  # ---------- MinIO 文件存储 ----------
+  minio:
+    container_name: rag-minio
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me}
+    volumes:
+      - rag-minio-data:/data
+    ports:
+      - "9000:9000"   # API 端口
+      - "9001:9001"   # 管理界面
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+
+  # ---------- MySQL 数据库 ----------
+  mysql:
+    container_name: rag-mysql
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me}
+      MYSQL_DATABASE: enterprise_assistant
+      MYSQL_USER: ${MYSQL_USER:-app_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me}
+    volumes:
+      - rag-mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+
+  # ---------- Redis 缓存 ----------
+  redis:
+    container_name: rag-redis
+    image: redis:7
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lfu
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  # ---------- Attu（Milvus 可视化管理，可选）----------
+  attu:
+    container_name: rag-attu
+    image: zilliz/attu:v2.4
+    environment:
+      MILVUS_URL: rag-milvus:19530
+    ports:
+      - "3000:3000"
+    depends_on:
+      - milvus
+    restart: unless-stopped
+
+volumes:
+  rag-etcd-data:
+  rag-milvus-data:
+  rag-minio-data:
+  rag-mysql-data:

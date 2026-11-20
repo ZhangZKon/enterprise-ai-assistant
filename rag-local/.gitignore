@@ -1,0 +1,11 @@
+*.pyc
+*.pyo
+__pycache__/
+.env
+/venv/
+/env/
+*.log
+*.swp
+.DS_Store
+new-rag/*
+test/*

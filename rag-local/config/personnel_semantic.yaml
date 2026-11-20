@@ -1,0 +1,127 @@
+# ══════════════════════════════════════════════════════════
+# Semantic Layer — Snowflake-style entity + operation 定义
+#
+# 新增实体/操作只需改此文件，不改 prompt、不改代码。
+# DSL 生成：LLM 根据此配置做 QueryPlan → JSON DSL
+# DSL 校验：sanitize 层从此文件读取约束规则
+# ══════════════════════════════════════════════════════════
+
+entities:
+
+  employee:
+    description: 企业员工信息，包含姓名、部门、职位、联系方式、工号、账号等
+
+    fields:
+      name:
+        type: string
+        label: 姓名
+        column: nickname
+        searchable: true
+        synonyms: [姓名, 名字, 员工, 人员, 谁, 是哪位, 叫什么]
+
+      username:
+        type: string
+        label: 账号
+        column: username
+        synonyms: [账号, 用户名]
+
+      employee_id:
+        type: string
+        label: 工号
+        column: employee_id
+        synonyms: [工号, 员工编号]
+
+      department:
+        type: string
+        label: 部门
+        column: department
+        synonyms: [部门, 处室, 科室, 组织, 哪个部门, 什么部门]
+
+      title:
+        type: string
+        label: 职位
+        column: title
+        synonyms: [职位, 岗位, 职务, 头衔, 做什么的, 干什么的]
+
+      phone:
+        type: string
+        label: 电话
+        column: phone
+        sensitive: true
+        permission:
+          role: [admin]
+        synonyms: [电话, 手机号, 联系方式, 手机, 号码]
+
+      email:
+        type: string
+        label: 邮箱
+        column: email
+        sensitive: true
+        permission:
+          role: [admin]
+        synonyms: [邮箱, 邮件, 邮箱地址, email]
+
+      supervisor:
+        type: string
+        label: 直属领导
+        column: supervisor
+        sensitive: true
+        permission:
+          role: [admin]
+        synonyms: [直属领导, 领导, 上级, 主管, 汇报对象, report_to]
+
+      hire_date:
+        type: date
+        label: 入职日期
+        column: hire_date
+        sensitive: true
+        permission:
+          role: [admin]
+        synonyms: [入职日期, 入职时间, 什么时候入职, 加入公司时间]
+
+    operations:
+      detail:
+        description: 查询某个人的详细信息（联系方式、部门、职位等）
+        require_any_filter: [name, phone, email, employee_id, username]
+
+      list:
+        description: 按部门、职位、直属领导或入职日期列出人员
+        require_any_filter: [department, title, name, supervisor, hire_date]
+
+      count:
+        description: 统计某部门或某职位的人数
+
+      distinct:
+        description: 列出所有部门或所有职位（去重枚举）
+        require_distinct_field: true
+
+      rag:
+        description: 通用问候、闲聊、能力询问，以及制度、流程、政策、申请方法、操作说明等知识类文档问题
+        no_filters: true
+
+      clarify:
+        description: 信息不足或无法判断意图，引导用户补充查询条件
+        no_filters: true
+
+    distinct_fields: [department, title]
+
+    select_field:
+      description: 当用户明确问某个字段（如"工号是多少""电话是多少""邮箱是什么"）时，select_fields 必须填对应的英文字段名，不能留空数组；只有用户没有指定字段时才留空数组
+      available: [employee_id, username, nickname, department, title, phone, email, supervisor, hire_date]
+      default_when_unspecified: [ ]
+
+    limits:
+      default: 20
+      max: 50
+
+    confidence:
+      description: 你对本次解析的把握程度，范围 0~1
+
+    reason:
+      description: 用一句话说明为何选择该操作
+
+    defaults:
+      list_select_fields: [nickname]
+      detail_select_fields: [employee_id, username, nickname, department, title]
+
+

@@ -1,0 +1,45 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.local
+
+# Python
+**/.venv/
+**/venv/
+**/__pycache__/
+**/*.py[cod]
+**/*.egg-info/
+
+# Java / Maven
+**/target/
+
+# Frontend
+**/node_modules/
+**/dist/
+**/.vite/
+**/*.tsbuildinfo
+
+# IDE and OS files
+**/.idea/
+**/.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Runtime output and local data
+**/logs/
+**/outputs/*
+!**/outputs/.gitkeep
+**/new-rag/
+**/other_docs/
+**/tmp_pdf/
+**/test/*.csv
+**/test/*.json
+**/.embedding_cache.json
+
+# Local Git metadata from the source repositories
+**/.git/

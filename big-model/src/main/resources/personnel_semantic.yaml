@@ -1,0 +1,75 @@
+domain: personnel
+description: 企业人员信息查询域
+
+fields:
+  - name: name
+    label: 姓名
+    column: nickname
+    sensitive: false
+    synonyms: [姓名, 名字, 员工, 人员]
+
+  - name: username
+    label: 账号
+    column: username
+    sensitive: false
+    synonyms: [账号, 用户名]
+
+  - name: employee_id
+    label: 工号
+    column: employee_id
+    sensitive: false
+    synonyms: [工号, 员工编号]
+
+  - name: department
+    label: 部门
+    column: department
+    sensitive: false
+    synonyms: [部门, 处室, 科室, 组织]
+
+  - name: title
+    label: 职位
+    column: title
+    sensitive: false
+    synonyms: [职位, 岗位, 职务, 头衔]
+
+  - name: phone
+    label: 电话
+    column: phone
+    sensitive: true
+    allowed_roles: [admin]
+    synonyms: [电话, 手机号, 联系方式, 手机]
+
+  - name: email
+    label: 邮箱
+    column: email
+    sensitive: true
+    allowed_roles: [admin]
+    synonyms: [邮箱, 邮件, 邮箱地址]
+
+operations:
+  - detail
+  - list
+  - count
+  - distinct
+  - rag
+  - clarify
+
+distinct_fields:
+  - department
+  - title
+
+limits:
+  default: 20
+  max: 50
+
+defaults:
+  list_select_fields:
+    - nickname
+    - department
+    - title
+  detail_select_fields:
+    - employee_id
+    - username
+    - nickname
+    - department
+    - title
